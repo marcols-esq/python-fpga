@@ -1,4 +1,4 @@
-from atlys_interface import AtlysInterface
+from interface.atlys_interface import AtlysInterface
 
 if __name__ == '__main__':
     atlys = AtlysInterface()

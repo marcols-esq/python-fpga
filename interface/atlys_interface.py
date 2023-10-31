@@ -1,15 +1,15 @@
 import logging
 import ctypes
-from pathlib import Path
+import os
 from sys import stdout
 
-from fpga_interface import FpgaInterface
+from .fpga_interface import FpgaInterface
 
-DMGR_DLL_PATH = Path("lib64\\dmgr.dll").absolute()
-DJTG_DLL_PATH = Path("lib64\\djtg.dll").absolute()
-DSTM_DLL_PATH = Path("lib64\\dstm.dll").absolute()
-DPC_DLL_PATH = Path("lib64\\dpcutil.dll").absolute()
-DEPP_DLL_PATH = Path("lib64\\depp.dll").absolute()
+DMGR_DLL_PATH = os.path.join(os.path.dirname(__file__), "..\\lib64\\dmgr.dll")
+DJTG_DLL_PATH = os.path.join(os.path.dirname(__file__), "..\\lib64\\djtg.dll")
+DSTM_DLL_PATH = os.path.join(os.path.dirname(__file__), "..\\lib64\\dstm.dll")
+DPC_DLL_PATH = os.path.join(os.path.dirname(__file__), "..\\lib64\\dpcutil.dll")
+DEPP_DLL_PATH = os.path.join(os.path.dirname(__file__), "..\\lib64\\depp.dll")
 
 MAX_NAME_LENGTH = 64
 MAX_PATH_LENGTH = 260
