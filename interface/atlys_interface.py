@@ -1,7 +1,10 @@
 import logging
 import ctypes
 import os
+import subprocess
+from re import search
 from sys import stdout
+from time import sleep
 
 from .fpga_interface import FpgaInterface
 
@@ -15,6 +18,9 @@ MAX_NAME_LENGTH = 64
 MAX_PATH_LENGTH = 260
 MAX_ERR_LENGTH = 128
 DEVICE_NAME = "Atlys"
+JTAG_PROGRAM_EXE_PATH = os.path.join(
+    os.path.dirname(__file__), "..\\binaries\\djtgcfg.exe"
+)
 
 
 class DVT(ctypes.Structure):
@@ -25,7 +31,7 @@ class DVT(ctypes.Structure):
 
 
 class AtlysInterface(FpgaInterface):
-    def __init__(self) -> None:
+    def __init__(self, bitfile_path=None) -> None:
         super().__init__()
         self.dmgr_lib = ctypes.CDLL(str(DMGR_DLL_PATH))
         self.djtg_lib = ctypes.CDLL(str(DJTG_DLL_PATH))
@@ -39,6 +45,8 @@ class AtlysInterface(FpgaInterface):
             device = ctypes.create_string_buffer(
                 size=len(DEVICE_NAME), init=DEVICE_NAME.encode()
             )
+            if bitfile_path is not None:
+                self._program_device(bitfile_path)
             self._call_func(
                 self.dmgr_lib.DmgrOpen, ctypes.byref(self.interface_handle), device
             )
@@ -142,6 +150,27 @@ class AtlysInterface(FpgaInterface):
         else:
             self.logger.debug("Error enumerating device")
         return False
+
+    def _program_device(self, bitfile_path):
+        delay_after_prog = 5
+        res = subprocess.run(
+            f"{JTAG_PROGRAM_EXE_PATH} -d {str(DEVICE_NAME)} init", capture_output=True
+        )
+        device_id = search(r"(?<=Device )[0-9]+", str(res.stdout))
+        self.logger.info(f"Attempting to program {DEVICE_NAME} device...")
+        res = subprocess.run(
+            f"{JTAG_PROGRAM_EXE_PATH} -d {str(DEVICE_NAME)} -i {device_id[0]} "
+            + f"prog -f {bitfile_path}",
+            stdout=subprocess.DEVNULL,
+        )
+        if res.returncode != 0:
+            self.logger.error(
+                f"Programming {DEVICE_NAME} device failed. Error code: {res.returncode}"
+            )
+            return
+        self.logger.info("Programming succeeded.")
+        self.logger.info(f"Waiting {delay_after_prog} seconds to let FPGA boot up...")
+        sleep(delay_after_prog)  # wait a bit for FPGA to start up
 
     def write(self, address: int, value: int) -> bool:
         no_overlap = ctypes.c_bool(False)
