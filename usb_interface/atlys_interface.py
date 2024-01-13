@@ -6,7 +6,8 @@ from re import search
 from sys import stdout
 from time import sleep
 
-from .fpga_interface import FpgaInterface
+from port_tools.port import IoPort, ClockPort
+from .usb_interface import UsbInterface
 
 DMGR_DLL_PATH = os.path.join(os.path.dirname(__file__), "..\\lib64\\dmgr.dll")
 DJTG_DLL_PATH = os.path.join(os.path.dirname(__file__), "..\\lib64\\djtg.dll")
@@ -30,7 +31,7 @@ class DVT(ctypes.Structure):
     ]
 
 
-class AtlysInterface(FpgaInterface):
+class AtlysInterface(UsbInterface):
     def __init__(self, bitfile_path=None) -> None:
         super().__init__()
         self.dmgr_lib = ctypes.CDLL(str(DMGR_DLL_PATH))
@@ -99,15 +100,15 @@ class AtlysInterface(FpgaInterface):
         self.depp_lib.DeppEnable.restype = ctypes.c_bool
         self.depp_lib.DeppPutReg.argtypes = [
             ctypes.c_uint32,
-            ctypes.c_byte,
-            ctypes.c_byte,
+            ctypes.c_ubyte,
+            ctypes.c_ubyte,
             ctypes.c_bool,
         ]
         self.depp_lib.DeppPutReg.restype = ctypes.c_bool
         self.depp_lib.DeppGetReg.argtypes = [
             ctypes.c_uint32,
-            ctypes.c_byte,
-            ctypes.POINTER(ctypes.c_byte),
+            ctypes.c_ubyte,
+            ctypes.POINTER(ctypes.c_ubyte),
             ctypes.c_bool,
         ]
         self.depp_lib.DeppGetReg.restype = ctypes.c_bool
@@ -172,10 +173,10 @@ class AtlysInterface(FpgaInterface):
         self.logger.info(f"Waiting {delay_after_prog} seconds to let FPGA boot up...")
         sleep(delay_after_prog)  # wait a bit for FPGA to start up
 
-    def write(self, address: int, value: int) -> bool:
+    def _write(self, address: int, value: int) -> bool:
         no_overlap = ctypes.c_bool(False)
-        c_address = ctypes.c_byte(address)
-        c_value = ctypes.c_byte(value)
+        c_address = ctypes.c_ubyte(address)
+        c_value = ctypes.c_ubyte(value)
         return self._call_func(
             self.depp_lib.DeppPutReg,
             self.interface_handle,
@@ -184,10 +185,13 @@ class AtlysInterface(FpgaInterface):
             no_overlap,
         )
 
-    def read(self, address: int) -> int:
+    def write(self, port: IoPort, value: int) -> bool:
+        return self._write(port.address, value)
+
+    def _read(self, address: int) -> int:
         no_overlap = ctypes.c_bool(False)
-        c_address = ctypes.c_byte(address)
-        c_readValue = ctypes.c_byte(0)
+        c_address = ctypes.c_ubyte(address)
+        c_readValue = ctypes.c_ubyte(0)
         self._call_func(
             self.depp_lib.DeppGetReg,
             self.interface_handle,
@@ -196,3 +200,9 @@ class AtlysInterface(FpgaInterface):
             no_overlap,
         )
         return int(c_readValue.value)
+
+    def read(self, port: IoPort) -> int:
+        return self._read(port.address)
+
+    def write_clock_cycles(self, port: ClockPort, cycles: int) -> bool:
+        return self._write(port, cycles)
