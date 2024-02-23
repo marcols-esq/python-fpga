@@ -6,7 +6,7 @@ class Port(object):
         self.name: str = kwargs.get(port_defs.NAME_KEY)
         if self.name is None:
             raise ValueError("Provided port has no name")
-        self.address: int = int(kwargs.get(port_defs.ADDRESS_KEY), 16)
+        self.address = [int(addr, 16) for addr in kwargs.get(port_defs.ADDRESS_KEY)]
 
 
 class IoPort(Port):
@@ -21,6 +21,9 @@ class IoPort(Port):
             )
 
         self.bit_width: int = kwargs.get(port_defs.BIT_WIDTH_KEY, 0)
+        if self.direction == port_defs.ALLOWED_DIRECTIONS[2]:
+            self.enable_signal_active = kwargs.get(port_defs.INOUT_ENABLE_SIGNAL_ACTIVE)
+            self.enable_signal = kwargs.get(port_defs.INOUT_ENABLE_SIGNAL)
 
 
 class ClockPort(Port):

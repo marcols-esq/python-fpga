@@ -1,0 +1,30 @@
+/*
+ * Auto generated hardware interface for "{}" FPGA. 
+ * !!! DO NOT MODIFY !!!
+ */
+
+module top_{} ({});
+
+wire [{}:0] {};
+
+reg [{}:0] {} [{}:0];
+wire [{}:0] {} [{}:0];
+
+{} INTERFACE ({});
+
+// CLK generators (if applicable)
+{}
+// Support signals for connecting to DUT
+{}
+{} DUT ({});
+
+always @(*)
+begin
+    // write input
+    {}[{}] <= {};
+end
+
+//assign for output
+assign {} = {}[{}];
+
+endmodule
