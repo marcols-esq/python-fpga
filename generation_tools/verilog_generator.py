@@ -193,6 +193,3 @@ class VerilogGenerator():
             dut_connections += ",\n" if i != port_count else "\n"
 
         return dut_connections, support_declarations
-        
-# test = VerilogGenerator()
-# test.create_top_module("atlys", Path("./tv80_cpu.v"), Path("./tv80_cpu_config.json"), Path())

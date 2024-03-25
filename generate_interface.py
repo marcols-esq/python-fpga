@@ -13,7 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description="Generator for JSON config and top Verilog interface module")
     parser.add_argument("-s", "--source_path", help="Path to Verilog source file (top module)", required=True)
     parser.add_argument("-i", "--interface", help="Interface schema to use when generating Verilog files", choices=SUPPORTED_INTERFACES, default=None)
-    parser.add_argument("clock_signals", help="Names of clock signals present in source file", nargs='*')
+    parser.add_argument("-c", "--clock_signals", help="Names of clock signals present in source file", nargs='*')
     parser.add_argument("-o", "--output_path", help="Path where generated files should be saved", default=Path())
     parser.add_argument("--inout_enables", help="List signal names that drive tri-state buffers of inout signals (in order as defined in Verilog source)", nargs="*")
     parser.add_argument("--inout_active", help="List of signal levels indicating that inout_enable signals are allowing for driving tri-state buffer (active low / active high; in order as defined for --inout_enables)", nargs="*", choices=["0", "1"])

@@ -8,6 +8,10 @@ import generation_tools.hdl.interfaces.interface_defs as defs
 
 PARAMETER_KEYWORD = "parameter"
 REG_KEYWORD = "reg"
+FUNCTION_KEYWORD = "function"
+ENDFUNCTION_KEYWORD = "endfunction"
+TASK_KEYWORD = "task"
+ENDTASK_KEYWORD = "endtask"
 
 class PortEncoder(json.JSONEncoder):
     def __init__(self):
@@ -21,6 +25,7 @@ class PortEncoder(json.JSONEncoder):
 
     def parse(self, file_path: Path, clock_ports: List[str], fpga_interface: str=None):
         self.clk_port_names = clock_ports
+        skip_line = False
 
         if fpga_interface is not None:
             self.json_body["fpga_interface"] = fpga_interface
@@ -29,9 +34,17 @@ class PortEncoder(json.JSONEncoder):
             for line in file:
                 keywords = line.split()
                 if keywords and "//" not in keywords[0]:
+                    if skip_line and not any(keyword in keywords for keyword in [ENDFUNCTION_KEYWORD, ENDTASK_KEYWORD]):
+                        continue
+                    else:
+                        skip_line = False
+                        
                     if PARAMETER_KEYWORD == keywords[0]:
                         param_value = re.findall(r"([0-9]+)[;,]*", " ".join(keywords))
                         self.verilog_params[keywords[1]] = int(param_value[0])
+                    elif any(keyword in keywords for keyword in [FUNCTION_KEYWORD, TASK_KEYWORD]):
+                        skip_line = True
+                        continue
                     elif defs.INPUT_KEYWORD in keywords[0] or defs.OUTPUT_KEYWORD in keywords[0] or defs.INOUT_KEYWORD in keywords[0]:
                         self._parse_port_definition(keywords)
         
